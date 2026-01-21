@@ -10,10 +10,11 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun coffeeLogDao(): CoffeeLogDao
 
-    companion object {
+    companion object {//this will be visible for other classes
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        //if there is an instance, return it, otherwise create one
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
