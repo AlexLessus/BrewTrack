@@ -30,7 +30,8 @@ import com.example.brewtrack.ui.theme.BrewTrackTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RatioCalculatorScreen(
-    viewModel: RatioCalculatorViewModel = hiltViewModel()
+    viewModel: RatioCalculatorViewModel = hiltViewModel(),
+    onNavigateToBrews: () -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val waterAmount by viewModel.waterAmount.collectAsStateWithLifecycle(lifecycleOwner)
@@ -60,7 +61,7 @@ fun RatioCalculatorScreen(
                     icon = { Icon(Icons.Default.Calculate, contentDescription = null) },
                     label = { Text("Calculator") },
                     selected = true,
-                    onClick = { /* Navegación */ },
+                    onClick = { /* Current Screen */ },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.primary,
                         selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -71,10 +72,9 @@ fun RatioCalculatorScreen(
                     icon = { Icon(Icons.Default.Book, contentDescription = null) },
                     label = { Text("Journal") },
                     selected = false,
-                    onClick = { /* Navegación */ },
+                    onClick = onNavigateToBrews,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.secondary,
-                        unselectedIconColor = Color.Gray
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 )
             }
@@ -258,13 +258,6 @@ fun RatioControlSection(
 @Composable
 fun RatioCalculatorScreenPreview() {
     BrewTrackTheme {
-        RatioCalculatorContent(
-            waterAmount = "250",
-            onWaterAmountChange = {},
-            coffeeAmount = "15.6",
-            onCoffeeAmountChange = {},
-            ratio = "16.0",
-            onRatioChange = {}
-        )
+        RatioCalculatorScreen(onNavigateToBrews = {})
     }
 }

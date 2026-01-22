@@ -4,7 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.brewtrack.ui.calculator.RatioCalculatorScreen
+import androidx.navigation.compose.rememberNavController
+import com.example.brewtrack.ui.AppNavHost
 import com.example.brewtrack.ui.theme.BrewTrackTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -15,7 +16,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BrewTrackTheme {
-                RatioCalculatorScreen()
+                val navController = rememberNavController()
+                AppNavHost(navController = navController)
             }
         }
     }

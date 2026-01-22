@@ -45,7 +45,11 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BrewsScreen(viewModel: BrewsViewModel = hiltViewModel()) {
+fun BrewsScreen(
+    viewModel: BrewsViewModel = hiltViewModel(),
+    onNavigateToCalculator: () -> Unit,
+    onNavigateToAddLog: () -> Unit
+) {
     val brews by viewModel.brews.collectAsState()
 
     Scaffold(
@@ -70,7 +74,7 @@ fun BrewsScreen(viewModel: BrewsViewModel = hiltViewModel()) {
                     icon = { Icon(Icons.Default.Calculate, contentDescription = null) },
                     label = { Text("Calculator") },
                     selected = false,
-                    onClick = { /* Navegación */ },
+                    onClick = onNavigateToCalculator,
                     colors = NavigationBarItemDefaults.colors(
                         unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -79,7 +83,7 @@ fun BrewsScreen(viewModel: BrewsViewModel = hiltViewModel()) {
                     icon = { Icon(Icons.Default.Book, contentDescription = null) },
                     label = { Text("Journal") },
                     selected = true,
-                    onClick = { /* Navegación */ },
+                    onClick = { /* Current Screen */ },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.primary,
                         selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -90,7 +94,7 @@ fun BrewsScreen(viewModel: BrewsViewModel = hiltViewModel()) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: Handle FAB click */ },
+                onClick = onNavigateToAddLog,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
@@ -227,25 +231,7 @@ fun formatDate(date: Date): String {
 @Preview(showBackground = true)
 @Composable
 fun BrewsScreenPreview() {
-    val dummyBrews = listOf(
-        CoffeeLog(beanName = "Ethiopia Yirgacheffe", method = "V60", rating = 4, date = Date(), ratio = 16.0f, water = 250f, coffee = 15.6f),
-        CoffeeLog(beanName = "Colombia Supremo", method = "Aeropress", rating = 5, date = Date(), ratio = 15.0f, water = 220f, coffee = 14.6f)
-    )
     BrewTrackTheme {
-        BrewsScreenContentPreviewWrapper(dummyBrews)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun BrewsScreenContentPreviewWrapper(brews: List<CoffeeLog>) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = { CenterAlignedTopAppBar(title = { Text("My Journal") }) },
-        floatingActionButton = { FloatingActionButton(onClick = {}) { Icon(Icons.Filled.Add, null) } }
-    ) { padding ->
-        LazyColumn(contentPadding = PaddingValues(16.dp), modifier = Modifier.padding(padding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            items(brews) { BrewCard(brew = it) }
-        }
+        BrewsScreen(onNavigateToCalculator = {}, onNavigateToAddLog = {})
     }
 }
