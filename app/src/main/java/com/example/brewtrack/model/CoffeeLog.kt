@@ -14,5 +14,6 @@ data class CoffeeLog(
     val water: Float,
     val coffee: Float,
     val rating: Int,
-    val date: Date
+    val date: Date,
+    val notes: String = ""
 )
