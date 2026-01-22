@@ -1,6 +1,5 @@
 package com.example.brewtrack.ui.calculator
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,17 +26,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.brewtrack.ui.theme.BrewTrackTheme
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-
-// --- Definición de Colores "Coffee Vibe" (Locales para este archivo o mover a Theme.kt) ---
-val CoffeeDark = Color(0xFF4E342E)
-val CoffeeMedium = Color(0xFF795548)
-val CreamBeige = Color(0xFFF5F5DC) // Background
-val SoftOrange = Color(0xFFFFCC80) // Acentos
-val Charcoal = Color(0xFF37474F)
-val SurfaceCream = Color(0xFFFFF8E1)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,32 +39,32 @@ fun RatioCalculatorScreen(
 
     // Envolvemos el contenido en un Scaffold para la estructura MD3
     Scaffold(
-        containerColor = CreamBeige,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
                         "Brew Calculator",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = CoffeeDark
+                        color = MaterialTheme.colorScheme.primary
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = CreamBeige
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
         bottomBar = {
-            NavigationBar(containerColor = SurfaceCream) {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Calculate, contentDescription = null) },
                     label = { Text("Calculator") },
                     selected = true,
                     onClick = { /* Navegación */ },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = CoffeeDark,
-                        selectedTextColor = CoffeeDark,
-                        indicatorColor = SoftOrange
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.tertiary
                     )
                 )
                 NavigationBarItem(
@@ -85,7 +73,7 @@ fun RatioCalculatorScreen(
                     selected = false,
                     onClick = { /* Navegación */ },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = CoffeeMedium,
+                        selectedIconColor = MaterialTheme.colorScheme.secondary,
                         unselectedIconColor = Color.Gray
                     )
                 )
@@ -130,7 +118,7 @@ fun RatioCalculatorContent(
         Text(
             text = "Adjust Parameters",
             style = MaterialTheme.typography.titleMedium,
-            color = Charcoal,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.align(Alignment.Start)
         )
 
@@ -161,7 +149,7 @@ fun ResultCard(ratio: String) {
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp),
-        colors = CardDefaults.cardColors(containerColor = CoffeeDark),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         shape = RoundedCornerShape(24.dp)
     ) {
@@ -173,7 +161,7 @@ fun ResultCard(ratio: String) {
             Text(
                 text = "Target Ratio",
                 style = MaterialTheme.typography.labelLarge,
-                color = SoftOrange
+                color = MaterialTheme.colorScheme.tertiary
             )
             Text(
                 text = "1:${"%.1f".format(ratio.toFloatOrNull() ?: 0f)}",
@@ -198,15 +186,15 @@ fun CoffeeInputRow(
         value = value,
         onValueChange = onValueChange,
         label = { Text(label) },
-        leadingIcon = { Icon(icon, contentDescription = null, tint = CoffeeMedium) },
+        leadingIcon = { Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.secondary) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = CoffeeDark,
-            focusedLabelColor = CoffeeDark,
-            cursorColor = CoffeeDark,
-            unfocusedContainerColor = SurfaceCream,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
             focusedContainerColor = Color.White
         ),
         singleLine = true
@@ -219,7 +207,7 @@ fun RatioControlSection(
     onRatioChange: (String) -> Unit
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = SurfaceCream),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -228,11 +216,11 @@ fun RatioControlSection(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Strength", style = MaterialTheme.typography.bodyLarge, color = Charcoal)
+                Text(text = "Strength", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
                 Text(
                     text = "1:${"%.1f".format(ratio.toFloatOrNull() ?: 0f)}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = CoffeeDark
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -243,8 +231,8 @@ fun RatioControlSection(
                 steps = 0, // Steps 0 hace que sea continuo y suave
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
-                    thumbColor = CoffeeDark,
-                    activeTrackColor = CoffeeMedium,
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.secondary,
                     inactiveTrackColor = Color.LightGray
                 )
             )
@@ -258,8 +246,8 @@ fun RatioControlSection(
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = MaterialTheme.typography.bodyMedium,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = CoffeeMedium,
-                    cursorColor = CoffeeMedium
+                    focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                    cursorColor = MaterialTheme.colorScheme.secondary
                 )
             )
         }

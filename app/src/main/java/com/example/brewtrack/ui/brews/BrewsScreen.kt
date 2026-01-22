@@ -1,29 +1,42 @@
 package com.example.brewtrack.ui.brews
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.rounded.Coffee
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarOutline
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.brewtrack.model.CoffeeLog
 import com.example.brewtrack.ui.theme.BrewTrackTheme
 import java.text.SimpleDateFormat
@@ -32,20 +45,69 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BrewsScreen() {
+fun BrewsScreen(viewModel: BrewsViewModel = hiltViewModel()) {
+    val brews by viewModel.brews.collectAsState()
+
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(title = { Text("My Brews") })
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        "My Journal",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        },
+        bottomBar = {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Calculate, contentDescription = null) },
+                    label = { Text("Calculator") },
+                    selected = false,
+                    onClick = { /* Navegación */ },
+                    colors = NavigationBarItemDefaults.colors(
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                )
+                NavigationBarItem(
+                    icon = { Icon(Icons.Default.Book, contentDescription = null) },
+                    label = { Text("Journal") },
+                    selected = true,
+                    onClick = { /* Navegación */ },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                        indicatorColor = MaterialTheme.colorScheme.tertiary
+                    )
+                )
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* TODO: Handle FAB click */ }) {
+            FloatingActionButton(
+                onClick = { /* TODO: Handle FAB click */ },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = CircleShape
+            ) {
                 Icon(Icons.Filled.Add, contentDescription = "Add new brew")
             }
         }
     ) { paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues)) {
-            items(dummyBrews) {
-                BrewCard(brew = it)
+        LazyColumn(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(brews) { brew ->
+                BrewCard(brew = brew)
             }
         }
     }
@@ -54,57 +116,136 @@ fun BrewsScreen() {
 @Composable
 fun BrewCard(brew: CoffeeLog) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = formatDate(brew.date),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Text(
+                    text = formatDate(brew.date).uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold
+                )
+                StarRatingDisplay(rating = brew.rating)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Coffee,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
                 Column {
                     Text(
                         text = brew.beanName,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = brew.method,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Star, contentDescription = "Rating", tint = MaterialTheme.colorScheme.tertiary)
-                    Text(text = "${brew.rating}/5", style = MaterialTheme.typography.bodyLarge)
-                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Divider(color = MaterialTheme.colorScheme.background, thickness = 1.dp)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                BrewStat(label = "Coffee", value = "${brew.coffee.toInt()}g")
+                BrewStat(label = "Water", value = "${brew.water.toInt()}ml")
+                BrewStat(label = "Ratio", value = "1:${brew.ratio.toInt()}")
             }
         }
     }
 }
 
+@Composable
+fun BrewStat(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+}
+
+@Composable
+fun StarRatingDisplay(rating: Int) {
+    Row {
+        repeat(5) { index ->
+            Icon(
+                imageVector = if (index < rating) Icons.Rounded.Star else Icons.Rounded.StarOutline,
+                contentDescription = null,
+                tint = if (index < rating) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
 fun formatDate(date: Date): String {
-    val pattern = "d MMMM, HH:mm"
+    val pattern = "d MMM, HH:mm" // Formato un poco más corto
     val simpleDateFormat = SimpleDateFormat(pattern, Locale.getDefault())
     return simpleDateFormat.format(date)
 }
 
-val dummyBrews = listOf(
-    CoffeeLog(beanName = "Ethiopia Yirgacheffe", method = "V60", rating = 4, date = Date(), ratio = 16.0f, water = 250f, coffee = 15.6f),
-    CoffeeLog(beanName = "Colombia Supremo", method = "Aeropress", rating = 5, date = Date(), ratio = 15.0f, water = 220f, coffee = 14.6f),
-    CoffeeLog(beanName = "Kenya AA", method = "French Press", rating = 3, date = Date(), ratio = 17.5f, water = 350f, coffee = 20.0f)
-)
-
 @Preview(showBackground = true)
 @Composable
 fun BrewsScreenPreview() {
+    val dummyBrews = listOf(
+        CoffeeLog(beanName = "Ethiopia Yirgacheffe", method = "V60", rating = 4, date = Date(), ratio = 16.0f, water = 250f, coffee = 15.6f),
+        CoffeeLog(beanName = "Colombia Supremo", method = "Aeropress", rating = 5, date = Date(), ratio = 15.0f, water = 220f, coffee = 14.6f)
+    )
     BrewTrackTheme {
-        BrewsScreen()
+        BrewsScreenContentPreviewWrapper(dummyBrews)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BrewsScreenContentPreviewWrapper(brews: List<CoffeeLog>) {
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = { CenterAlignedTopAppBar(title = { Text("My Journal") }) },
+        floatingActionButton = { FloatingActionButton(onClick = {}) { Icon(Icons.Filled.Add, null) } }
+    ) { padding ->
+        LazyColumn(contentPadding = PaddingValues(16.dp), modifier = Modifier.padding(padding), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(brews) { BrewCard(brew = it) }
+        }
     }
 }
