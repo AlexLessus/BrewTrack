@@ -120,8 +120,8 @@ fun AddLogScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     CompactNumericInput(
-                        value = "${uiState.coffeeAmount}",
-                        onValueChange = { /* viewModel.onCoffeeChange(it) */ },
+                        value = uiState.coffeeAmount,
+                        onValueChange = viewModel::onCoffeeAmountChange,
                         label = "Coffee",
                         suffix = "g",
                         modifier = Modifier.weight(1f)
@@ -130,8 +130,8 @@ fun AddLogScreen(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     CompactNumericInput(
-                        value = "${uiState.waterAmount}",
-                        onValueChange = { /* viewModel.onWaterChange(it) */ },
+                        value = uiState.waterAmount,
+                        onValueChange = viewModel::onWaterAmountChange,
                         label = "Water",
                         suffix = "ml",
                         modifier = Modifier.weight(1f)
@@ -140,7 +140,7 @@ fun AddLogScreen(
                     Spacer(modifier = Modifier.width(8.dp))
 
                     CompactNumericInput(
-                        value = "1:${uiState.ratio}",
+                        value = "1:${String.format("%.1f", uiState.ratio)}",
                         onValueChange = {},
                         label = "Ratio",
                         suffix = "",

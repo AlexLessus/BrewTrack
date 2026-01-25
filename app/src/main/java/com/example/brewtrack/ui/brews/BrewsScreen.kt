@@ -1,6 +1,7 @@
 package com.example.brewtrack.ui.brews
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,7 +49,8 @@ import java.util.Locale
 fun BrewsScreen(
     viewModel: BrewsViewModel = hiltViewModel(),
     onNavigateToCalculator: () -> Unit,
-    onNavigateToAddLog: () -> Unit
+    onNavigateToAddLog: () -> Unit,
+    onNavigateToDetail: (Long) -> Unit
 ) {
     val brews by viewModel.brews.collectAsState()
 
@@ -111,16 +113,19 @@ fun BrewsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(brews) { brew ->
-                BrewCard(brew = brew)
+                BrewCard(brew = brew, onClick = { onNavigateToDetail(brew.id) })
             }
         }
     }
 }
 
 @Composable
-fun BrewCard(brew: CoffeeLog) {
+fun BrewCard(
+    brew: CoffeeLog,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp)
@@ -232,6 +237,6 @@ fun formatDate(date: Date): String {
 @Composable
 fun BrewsScreenPreview() {
     BrewTrackTheme {
-        BrewsScreen(onNavigateToCalculator = {}, onNavigateToAddLog = {})
+        BrewsScreen(onNavigateToCalculator = {}, onNavigateToAddLog = {}, onNavigateToDetail = {})
     }
 }

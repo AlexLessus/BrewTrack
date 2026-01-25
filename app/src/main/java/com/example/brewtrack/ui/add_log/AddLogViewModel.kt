@@ -19,9 +19,9 @@ data class AddLogUiState(
     val method: String = "V60", // Default method
     val rating: Int = 0,
     val notes: String = "",
-    val coffeeAmount: Float = 0f,
-    val waterAmount: Float = 0f,
-    val ratio: Float = 0f,
+    val coffeeAmount: String = "15",
+    val waterAmount: String = "250",
+    val ratio: Float = 16.6f,
     val isLogSaved: Boolean = false
 )
 
@@ -35,18 +35,16 @@ class AddLogViewModel @Inject constructor(
     val uiState: StateFlow<AddLogUiState> = _uiState.asStateFlow()
 
     init {
-        // For now, let's assume these are passed as nav arguments
-        val coffee: Float = savedStateHandle.get<String>("coffee")?.toFloatOrNull() ?: 15f
-        val water: Float = savedStateHandle.get<String>("water")?.toFloatOrNull() ?: 250f
-        val ratio: Float = savedStateHandle.get<String>("ratio")?.toFloatOrNull() ?: 16f
+        val coffee: String = savedStateHandle.get<String>("coffee") ?: "15"
+        val water: String = savedStateHandle.get<String>("water") ?: "250"
 
         _uiState.update {
             it.copy(
                 coffeeAmount = coffee,
-                waterAmount = water,
-                ratio = ratio
+                waterAmount = water
             )
         }
+        updateRatio()
     }
 
     fun onBeanNameChange(newName: String) {
@@ -65,6 +63,27 @@ class AddLogViewModel @Inject constructor(
         _uiState.update { it.copy(notes = newNotes) }
     }
 
+    fun onCoffeeAmountChange(newAmount: String) {
+        _uiState.update { it.copy(coffeeAmount = newAmount) }
+        updateRatio()
+    }
+
+    fun onWaterAmountChange(newAmount: String) {
+        _uiState.update { it.copy(waterAmount = newAmount) }
+        updateRatio()
+    }
+
+    private fun updateRatio() {
+        val coffee = _uiState.value.coffeeAmount.toFloatOrNull()
+        val water = _uiState.value.waterAmount.toFloatOrNull()
+
+        if (coffee != null && water != null && coffee > 0) {
+            _uiState.update { it.copy(ratio = water / coffee) }
+        } else {
+            _uiState.update { it.copy(ratio = 0f) }
+        }
+    }
+
     fun saveLog() {
         viewModelScope.launch {
             val currentState = _uiState.value
@@ -73,8 +92,8 @@ class AddLogViewModel @Inject constructor(
                 method = currentState.method,
                 rating = currentState.rating,
                 date = Date(),
-                coffee = currentState.coffeeAmount,
-                water = currentState.waterAmount,
+                coffee = currentState.coffeeAmount.toFloatOrNull() ?: 0f,
+                water = currentState.waterAmount.toFloatOrNull() ?: 0f,
                 ratio = currentState.ratio,
                 notes = currentState.notes
             )
