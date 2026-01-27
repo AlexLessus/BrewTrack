@@ -29,8 +29,8 @@ This project is built using the latest industry standards for Android:
 ## 🚀 Roadmap
 
 - [x] Initial UI Design with Compose
-- [ ] Implement Calculator Logic
-- [ ] Set up Room Database for logging
+- [x] Implement Calculator Logic
+- [x] Set up Room Database for logging
 - [ ] Add filters and search for past logs
 - [ ] Data Export (JSON/CSV)
 
@@ -38,5 +38,3 @@ This project is built using the latest industry standards for Android:
 
 This is a personal learning project, but suggestions are welcome! Feel free to open an issue if you have ideas on how to improve the code or the coffee recipes.
 
----
-*Built with ❤️ and ☕ by Alexis*
