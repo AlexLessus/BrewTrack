@@ -10,11 +10,17 @@ This project is also a personal journey to master **Modern Android Development**
 
 ## ✨ Key Features
 
-* **🧮 Smart Ratio Calculator:** Real-time calculation of water vs. coffee grounds (e.g., 1:15, 1:16).
+* **🧮 Smart Ratio Calculator:** Real-time calculation of water vs. coffee grounds (e.g., 1:15, 1:16). 
 * **📓 Brew Log:** Save your recipes with details like bean origin, grind size, temperature, and brew method (V60, French Press, etc.).
 * **📶 Offline-First:** Built with local persistence in mind. Your data stays on your device, no internet required.
 * **⭐ Rating System:** Rate your brews to identify which variables produce the best flavor.
 
+## 📸 Screenshots
+  <div>
+    <img src="./SS/Calculator.jpeg" alt="Descripción" height="200" />  
+    <img src="./SS/CoffeeLog.jpeg" alt="Descripción" height="200" />  
+  </div>
+  
 ## 🛠️ Tech Stack
 
 This project is built using the latest industry standards for Android:
