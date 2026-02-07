@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.brewtrack.model.TurbulenceType
+import com.example.brewtrack.model.PourStep
 import com.example.brewtrack.ui.theme.BrewTrackTheme
 import kotlinx.coroutines.flow.collectLatest
 
@@ -191,10 +192,13 @@ fun AddLogScreen(
                 Spacer(Modifier.height(16.dp))
 
                 // Pours Stepper
-                StepperInput(
-                    label = "Total Pours",
-                    value = uiState.pours,
-                    onValueChange = viewModel::onPoursChange
+                // Recipe Builder (Dynamic Pours)
+                RecipeBuilderTable(
+                    numberOfPours = uiState.numberOfPours,
+                    steps = uiState.recipeSteps,
+                    onPoursChange = viewModel::onNumberOfPoursChange,
+                    onStepWaterChange = viewModel::onStepWaterChange,
+                    onStepTimeChange = viewModel::onStepTimeChange
                 )
                 Spacer(Modifier.height(16.dp))
                 
@@ -266,6 +270,24 @@ fun AddLogScreen(
                     onValueChange = viewModel::onBodyChange,
                     leftLabel = "Watery",
                     rightLabel = "Syrupy"
+                )
+                Spacer(Modifier.height(12.dp))
+
+                SensorySlider(
+                    label = "Aftertaste",
+                    value = uiState.aftertaste,
+                    onValueChange = viewModel::onAftertasteChange,
+                    leftLabel = "Short",
+                    rightLabel = "Lingering"
+                )
+                Spacer(Modifier.height(12.dp))
+
+                SensorySlider(
+                    label = "Bitterness",
+                    value = uiState.bitterness,
+                    onValueChange = viewModel::onBitternessChange,
+                    leftLabel = "None",
+                    rightLabel = "Harsh"
                 )
                 Spacer(Modifier.height(24.dp))
                 
@@ -541,4 +563,139 @@ fun AddLogScreenPreview() {
     BrewTrackTheme {
         AddLogScreen(onLogSaved = {})
     }
+}
+
+@Composable
+fun RecipeBuilderTable(
+    numberOfPours: Int,
+    steps: List<PourStep>,
+    onPoursChange: (Int) -> Unit,
+    onStepWaterChange: (Int, String) -> Unit,
+    onStepTimeChange: (Int, String) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // 1. Selector de Pours
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Recipe Steps", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.3f))
+                    .padding(2.dp)
+            ) {
+                IconButton(
+                    onClick = { if (numberOfPours > 1) onPoursChange(numberOfPours - 1) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Filled.Remove, null, tint = MaterialTheme.colorScheme.primary)
+                }
+                
+                Text(
+                    text = "$numberOfPours Pours",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                
+                IconButton(
+                    onClick = { onPoursChange(numberOfPours + 1) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Filled.Add, null, tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
+
+        // 2. Header de la Tabla
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text("Phase", modifier = Modifier.weight(1.2f), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text("Time", modifier = Modifier.weight(0.8f), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text("H2O (g)", modifier = Modifier.weight(0.8f), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text("Total", modifier = Modifier.weight(0.8f), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+        }
+
+        // 3. Filas
+        steps.forEachIndexed { index, step ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp, horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Phase Name
+                Text(
+                    text = step.phase,
+                    modifier = Modifier.weight(1.2f),
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1
+                )
+
+                // Time Input
+                BasicCompactInput(
+                    value = step.time,
+                    onValueChange = { onStepTimeChange(index, it) },
+                    placeholder = "0:00",
+                    modifier = Modifier.weight(0.8f)
+                )
+
+                // Water Input
+                // Si es 0 y no es Bloom, mostrar vacío para que el usuario escriba. Bloom arranca en 0?
+                // El usuario escribe cuanto agrega.
+                val displayWater = if (step.waterAdded == 0f) "" else step.waterAdded.toString().removeSuffix(".0")
+                BasicCompactInput(
+                    value = displayWater,
+                    onValueChange = { onStepWaterChange(index, it) },
+                    placeholder = "0",
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.weight(0.8f)
+                )
+
+                // Total (Calculated)
+                Text(
+                    text = "${step.totalWeight.toInt()}g",
+                    modifier = Modifier.weight(0.8f),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        }
+    }
+}
+
+@Composable
+fun BasicCompactInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, fontSize = 10.sp, color = Color.Gray) },
+        modifier = modifier.height(48.dp), // Fixed height to align rows
+        textStyle = MaterialTheme.typography.bodySmall,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Next),
+        colors = OutlinedTextFieldDefaults.colors(
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(8.dp)
+    )
 }
