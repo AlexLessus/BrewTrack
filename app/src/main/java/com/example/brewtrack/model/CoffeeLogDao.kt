@@ -24,4 +24,16 @@ interface CoffeeLogDao {
 
     @Query("SELECT * FROM coffee_logs WHERE id = :id")
     fun getById(id: Long): Flow<CoffeeLog>
+
+    // 1. "Ver solo mis cafés de 5 estrellas"
+    @Query("SELECT * FROM coffee_logs WHERE rating >= :minRating ORDER BY date DESC")
+    fun getLogsByRating(minRating: Int): Flow<List<CoffeeLog>>
+
+    // 2. "Repetir receta"
+    @Query("SELECT * FROM coffee_logs WHERE method = :methodName ORDER BY date DESC")
+    fun getLogsByMethod(methodName: String): Flow<List<CoffeeLog>>
+
+    // 3. Búsqueda por grano
+    @Query("SELECT * FROM coffee_logs WHERE origin LIKE '%' || :searchQuery || '%' ORDER BY date DESC")
+    fun searchLogsByOrigin(searchQuery: String): Flow<List<CoffeeLog>>
 }

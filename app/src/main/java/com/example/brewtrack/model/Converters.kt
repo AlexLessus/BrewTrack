@@ -13,4 +13,18 @@ class Converters {
     fun dateToTimestamp(date: Date?): Long? {
         return date?.time
     }
+
+    @TypeConverter
+    fun fromTurbulence(value: String?): TurbulenceType {
+        return try {
+            if (value != null) TurbulenceType.valueOf(value) else TurbulenceType.NONE
+        } catch (e: Exception) {
+            TurbulenceType.NONE
+        }
+    }
+
+    @TypeConverter
+    fun turbulenceToString(turbulence: TurbulenceType?): String {
+        return turbulence?.name ?: TurbulenceType.NONE.name
+    }
 }
