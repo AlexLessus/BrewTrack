@@ -40,7 +40,15 @@ fun AppNavHost(
                 }
             )
         }
-        composable(AppDestinations.ADD_LOG_ROUTE) {
+        composable(
+            route = "${AppDestinations.ADD_LOG_ROUTE}?logId={logId}",
+            arguments = listOf(
+                navArgument("logId") {
+                     type = NavType.LongType
+                     defaultValue = -1L
+                }
+            )
+        ) {
             AddLogScreen(
                 onLogSaved = { navController.popBackStack() }
             )
@@ -50,7 +58,10 @@ fun AppNavHost(
             arguments = listOf(navArgument("logId") { type = NavType.LongType })
         ) {
             BrewDetailScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onEditLog = { logId ->
+                    navController.navigate("${AppDestinations.ADD_LOG_ROUTE}?logId=$logId")
+                }
             )
         }
     }

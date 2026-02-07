@@ -8,11 +8,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -37,9 +37,11 @@ import kotlin.math.sin
 @Composable
 fun BrewDetailScreen(
     viewModel: BrewDetailViewModel = hiltViewModel(),
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onEditLog: (Long) -> Unit
 ) {
     val brew by viewModel.brew.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -50,10 +52,43 @@ fun BrewDetailScreen(
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
+                actions = {
+                    brew?.let { log ->
+                        IconButton(onClick = { onEditLog(log.id) }) {
+                            Icon(Icons.Filled.Edit, contentDescription = "Edit", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { paddingValues ->
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Log") },
+                text = { Text("Are you sure you want to delete this brew log? This action cannot be undone.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.deleteLog {
+                            showDeleteDialog = false
+                            onNavigateBack()
+                        }
+                    }) {
+                        Text("Delete", color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
         brew?.let { log ->
             Column(
                 modifier = Modifier
@@ -80,6 +115,7 @@ fun BrewDetailScreen(
                     sweetness = log.sweetness ?: 0,
                     body = log.body ?: 0,
                     aftertaste = log.aftertaste ?: 0,
+                    bitterness = log.bitterness ?: 0,
                     modifier = Modifier.size(300.dp)
                 )
                 Spacer(modifier = Modifier.height(32.dp))
@@ -161,18 +197,18 @@ fun CoffeeRadarChart(
     sweetness: Int,
     body: Int,
     aftertaste: Int,
-    bitterness: Int = 1, // Defaulting to 1 as requested or minimal
+    bitterness: Int,
     modifier: Modifier = Modifier
 ) {
     // Normalizing 0 input to 1 for visual purposes if needed, strictly sticking to user request logic
     val data = listOf(
-        acidity.coerceAtLeast(1), 
-        sweetness.coerceAtLeast(1), 
+        sweetness.coerceAtLeast(1),
         body.coerceAtLeast(1), 
-        aftertaste.coerceAtLeast(1), 
-        bitterness.coerceAtLeast(1)
+        aftertaste.coerceAtLeast(1),
+        bitterness.coerceAtLeast(1), 
+        acidity.coerceAtLeast(1)
     )
-    val labels = listOf("Acidity", "Sweetness", "Body", "Aftertaste", "Bitterness")
+    val labels = listOf("Sweetness", "Body", "Aftertaste", "Bitterness", "Acidity")
     val maxValue = 5f
     
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -288,7 +324,7 @@ fun TechItem(icon: ImageVector, label: String, value: String) {
             modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+            Icon(icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
         }
         Spacer(Modifier.width(12.dp))
         Column {

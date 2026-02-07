@@ -9,12 +9,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class BrewDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    coffeeLogRepository: CoffeeLogRepository
+    private val coffeeLogRepository: CoffeeLogRepository
 ) : ViewModel() {
 
     private val logId: Long = checkNotNull(savedStateHandle["logId"])
@@ -25,4 +26,13 @@ class BrewDetailViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000L),
             initialValue = null
         )
+
+    fun deleteLog(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            brew.value?.let { 
+                coffeeLogRepository.delete(it) 
+                onSuccess()
+            }
+        }
+    }
 }

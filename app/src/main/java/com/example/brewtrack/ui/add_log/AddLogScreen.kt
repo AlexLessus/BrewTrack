@@ -55,11 +55,43 @@ fun AddLogScreen(
         }
     }
 
+    if (uiState.showReuseDialog) {
+        AlertDialog(
+            onDismissRequest = viewModel::onReuseDialogDismiss,
+            title = { Text(text = "Reuse Previous Info?") },
+            text = { 
+                Column {
+                    Text("Do you want to use the details from your last brew?")
+                    Spacer(Modifier.height(8.dp))
+                    Text("• Bean: ${uiState.lastLogData?.origin}")
+                    Text("• Process: ${uiState.lastLogData?.process}")
+                    Text("• Roast: ${uiState.lastLogData?.roast}")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = viewModel::onReuseDialogConfirm) {
+                    Text("Yes, Reuse")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::onReuseDialogDismiss) {
+                    Text("No, Start Fresh")
+                }
+            }
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("New Entry", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) },
+                title = { 
+                    Text(
+                        if (uiState.currentLogId != null) "Edit Entry" else "New Entry", 
+                        fontWeight = FontWeight.Bold, 
+                        color = MaterialTheme.colorScheme.primary
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = { onLogSaved() }) {
                         Icon(Icons.Filled.Close, contentDescription = "Cancel", tint = MaterialTheme.colorScheme.secondary)

@@ -48,7 +48,10 @@ data class AddLogUiState(
     // General
     val rating: Int = 0,
     val notes: String = "",
-    val isLogSaved: Boolean = false
+    val isLogSaved: Boolean = false,
+    val currentLogId: Long? = null, // Null = New Log, Value = Editing
+    val showReuseDialog: Boolean = false,
+    val lastLogData: CoffeeLog? = null // Store data found for reuse
 )
 
 @HiltViewModel
@@ -61,22 +64,93 @@ class AddLogViewModel @Inject constructor(
     val uiState: StateFlow<AddLogUiState> = _uiState.asStateFlow()
 
     init {
-        val coffee: String = savedStateHandle.get<String>("coffee") ?: "20"
-        val water: String = savedStateHandle.get<String>("water") ?: "300"
+        val logId = savedStateHandle.get<Long>("logId")
 
-        // Initialize with default steps
-        val defaultPours = 3
-        val initialSteps = generateSteps(defaultPours)
+        if (logId != null && logId != -1L) {
+            // EDIT MODE: Load existing log
+            viewModelScope.launch {
+                val existingLog = coffeeLogRepository.getLogById(logId)
+                existingLog?.let { log ->
+                    _uiState.update { 
+                        it.copy(
+                            currentLogId = log.id,
+                            origin = log.origin,
+                            process = log.process,
+                            roast = log.roast,
+                            method = log.method,
+                            ratio = log.ratio,
+                            coffeeInGrams = log.coffeeInGrams.toString().removeSuffix(".0"),
+                            waterInMilliliters = log.waterInMilliliters.toString().removeSuffix(".0"),
+                            waterTemperature = log.waterTemperature.toString(),
+                            grindSize = log.grindSize.toString(),
+                            bloomTime = log.bloomTime.toString(),
+                            numberOfPours = if(log.recipeSteps.isNotEmpty()) log.recipeSteps.size - 1 else 3, // -1 for bloom
+                            recipeSteps = log.recipeSteps,
+                            turbulence = log.turbulence,
+                            contactTime = log.contactTime.toString(),
+                            totalTime = log.totalTime.toString(),
+                            acidity = log.acidity,
+                            sweetness = log.sweetness,
+                            body = log.body,
+                            aftertaste = log.aftertaste,
+                            bitterness = log.bitterness,
+                            rating = log.rating,
+                            notes = log.notes
+                        )
+                    }
+                }
+            }
+        } else {
+            // NEW LOG MODE: Auto-fill defaults
+            val coffee: String = savedStateHandle.get<String>("coffee") ?: "20"
+            val water: String = savedStateHandle.get<String>("water") ?: "300"
+            
+            val defaultPours = 3
+            val initialSteps = generateSteps(defaultPours)
 
-        _uiState.update {
-            it.copy(
-                coffeeInGrams = coffee,
-                waterInMilliliters = water,
-                numberOfPours = defaultPours,
-                recipeSteps = initialSteps
-            )
+            _uiState.update {
+                it.copy(
+                    coffeeInGrams = coffee,
+                    waterInMilliliters = water,
+                    numberOfPours = defaultPours,
+                    recipeSteps = initialSteps
+                )
+            }
+            updateRatio()
+
+            viewModelScope.launch {
+                try {
+                    val lastLog = coffeeLogRepository.getLatestLog()
+                    if (lastLog != null) {
+                        _uiState.update { 
+                            it.copy(
+                                showReuseDialog = true,
+                                lastLogData = lastLog
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Ignore
+                }
+            }
         }
-        updateRatio()
+    }
+
+    fun onReuseDialogConfirm() {
+        _uiState.value.lastLogData?.let { log ->
+            _uiState.update { 
+                it.copy(
+                    origin = log.origin,
+                    process = log.process,
+                    roast = log.roast,
+                    showReuseDialog = false
+                )
+            }
+        }
+    }
+
+    fun onReuseDialogDismiss() {
+         _uiState.update { it.copy(showReuseDialog = false) }
     }
 
     fun onOriginChange(newOrigin: String) {
@@ -261,10 +335,17 @@ class AddLogViewModel @Inject constructor(
                 aftertaste = currentState.aftertaste,
                 bitterness = currentState.bitterness,
                 rating = currentState.rating,
-                date = System.currentTimeMillis(),
+                date = System.currentTimeMillis(), // We update the date on edit to bump to top, or keep original? Let's bump for now as "latest activity".
                 notes = currentState.notes
             )
-            coffeeLogRepository.insert(newLog)
+            
+            if (currentState.currentLogId != null) {
+                // UPDATE
+                coffeeLogRepository.update(newLog.copy(id = currentState.currentLogId))
+            } else {
+                // INSERT
+                coffeeLogRepository.insert(newLog)
+            }
             _uiState.update { it.copy(isLogSaved = true) }
         }
     }
