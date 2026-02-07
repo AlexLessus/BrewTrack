@@ -10,6 +10,8 @@ class CoffeeLogRepository @Inject constructor(
 
     fun getById(id: Long): Flow<CoffeeLog> = coffeeLogDao.getById(id)
 
+    suspend fun getLogById(id: Long): CoffeeLog? = coffeeLogDao.getLogById(id)
+
     fun getLogsByRating(rating: Int): Flow<List<CoffeeLog>> =
         coffeeLogDao.getLogsByRating(rating)
 
@@ -18,6 +20,8 @@ class CoffeeLogRepository @Inject constructor(
 
     fun searchLogs(query: String): Flow<List<CoffeeLog>> =
         coffeeLogDao.searchLogsByOrigin(query)
+
+    suspend fun getLatestLog(): CoffeeLog? = coffeeLogDao.getLatestLog()
 
     suspend fun insert(coffeeLog: CoffeeLog) {
         coffeeLogDao.insert(coffeeLog)

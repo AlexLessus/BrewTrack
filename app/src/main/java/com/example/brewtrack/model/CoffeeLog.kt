@@ -31,9 +31,8 @@ data class CoffeeLog(
 
     // --- TÉCNICA ---
     val bloomTime: Int,            // Segundos
-    val pours: Int,                // Número de vertidos
+    val recipeSteps: List<PourStep> = emptyList(), // Pasos de la receta
     val turbulence: TurbulenceType,// Turbulencia (FA o FE)
-    val pourDetails: String,       // Ej: "40g, 100g, 160g"
     val contactTime: Int,          // Tiempo de contacto (segundos)
     val totalTime: Int,            // Tiempo total (segundos)
 
@@ -42,6 +41,7 @@ data class CoffeeLog(
     val sweetness: Int? = null,
     val body: Int? = null,
     val aftertaste: Int? = null,
+    val bitterness: Int? = null,
 
     // --- GENERAL ---
     val rating: Int,               // Calificación general (1-5)

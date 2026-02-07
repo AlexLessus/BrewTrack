@@ -1,6 +1,8 @@
 package com.example.brewtrack.model
 
 import androidx.room.TypeConverter
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.util.Date
 
 class Converters {
@@ -26,5 +28,19 @@ class Converters {
     @TypeConverter
     fun turbulenceToString(turbulence: TurbulenceType?): String {
         return turbulence?.name ?: TurbulenceType.NONE.name
+    }
+
+    @TypeConverter
+    fun fromPourStepList(value: String?): List<PourStep> {
+        if (value == null) {
+            return emptyList()
+        }
+        val listType = object : TypeToken<List<PourStep>>() {}.type
+        return Gson().fromJson(value, listType)
+    }
+
+    @TypeConverter
+    fun pourStepListToString(list: List<PourStep>?): String {
+        return Gson().toJson(list ?: emptyList<PourStep>())
     }
 }
