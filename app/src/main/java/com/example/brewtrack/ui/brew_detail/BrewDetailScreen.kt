@@ -66,7 +66,7 @@ fun BrewDetailScreen(
         ) {
             brew?.let { log ->
                 Text(
-                    text = log.beanName,
+                    text = log.origin,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -120,8 +120,8 @@ fun BrewDetailScreen(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceAround
                     ) {
-                        BrewStat(label = "Coffee", value = "${log.coffee}g")
-                        BrewStat(label = "Water", value = "${log.water}ml")
+                        BrewStat(label = "Coffee", value = "${log.coffeeInGrams}g")
+                        BrewStat(label = "Water", value = "${log.waterInMilliliters}ml")
                         BrewStat(label = "Ratio", value = "1:${String.format("%.1f", log.ratio)}")
                     }
                 }
@@ -164,7 +164,8 @@ fun BrewStat(label: String, value: String) {
     }
 }
 
-fun formatDate(date: Date): String {
+fun formatDate(timestamp: Long): String {
+    val date = Date(timestamp)
     val pattern = "d MMM yyyy, HH:mm"
     val simpleDateFormat = SimpleDateFormat(pattern, Locale.getDefault())
     return simpleDateFormat.format(date)

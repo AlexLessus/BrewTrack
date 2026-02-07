@@ -1,21 +1,28 @@
 package com.example.brewtrack.ui.add_log
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -26,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.brewtrack.model.TurbulenceType
 import com.example.brewtrack.ui.theme.BrewTrackTheme
 import kotlinx.coroutines.flow.collectLatest
 
@@ -52,7 +60,7 @@ fun AddLogScreen(
             CenterAlignedTopAppBar(
                 title = { Text("New Entry", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) },
                 navigationIcon = {
-                    IconButton(onClick = { onLogSaved() /* O navegación hacia atrás */ }) {
+                    IconButton(onClick = { onLogSaved() }) {
                         Icon(Icons.Filled.Close, contentDescription = "Cancel", tint = MaterialTheme.colorScheme.secondary)
                     }
                 },
@@ -81,168 +89,384 @@ fun AddLogScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            // --- Sección 1: Detalles del Grano ---
-            SectionHeader(title = "The Bean", icon = Icons.Rounded.Grain)
-
-            OutlinedTextField(
-                value = uiState.beanName,
-                onValueChange = viewModel::onBeanNameChange,
-                label = { Text("Bean Name / Origin") },
-                placeholder = { Text("e.g. Ethiopia Yirgacheffe") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = coffeeInputColors(),
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                leadingIcon = { Icon(Icons.Rounded.Coffee, null, tint = MaterialTheme.colorScheme.secondary) }
-            )
-
-            BrewMethodSelector(
-                selectedMethod = uiState.method,
-                onMethodSelected = viewModel::onMethodChange
-            )
-
-            // --- Sección 2: La Receta (Inputs compactos) ---
-            SectionHeader(title = "The Recipe", icon = Icons.Rounded.Science)
-
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth()
+            // --- 1. RESUMEN (Grano, Método, Ratio) ---
+            ExpandableCard(
+                title = "Summary",
+                icon = Icons.Rounded.Grain,
+                initialExpanded = true
             ) {
+                // Bean Info
+                OutlinedTextField(
+                    value = uiState.origin,
+                    onValueChange = viewModel::onOriginChange,
+                    label = { Text("Origin / Bean Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = coffeeInputColors(),
+                    singleLine = true
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = uiState.process,
+                        onValueChange = viewModel::onProcessChange,
+                        label = { Text("Process") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = coffeeInputColors(),
+                        singleLine = true
+                    )
+                }
+                Spacer(Modifier.height(16.dp))
+
+                // Roast Selection
+                Text("Roast Level", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                SingleChoiceSegmentedRow(
+                    options = listOf("Light", "Medium", "Dark"),
+                    selectedOption = uiState.roast,
+                    onOptionSelected = viewModel::onRoastChange
+                )
+                Spacer(Modifier.height(16.dp))
+
+                // Method Selection
+                Text("Brew Method", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                FlowRowGeneric(
+                    items = listOf("V60", "Kalita", "Origami", "Chemex", "Aeropress", "French Press"),
+                    selectedItem = uiState.method,
+                    onItemSelected = viewModel::onMethodChange
+                )
+                Spacer(Modifier.height(16.dp))
+
+                // Ratio & Amounts
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     CompactNumericInput(
-                        value = uiState.coffeeAmount,
-                        onValueChange = viewModel::onCoffeeAmountChange,
+                        value = uiState.coffeeInGrams,
+                        onValueChange = viewModel::onCoffeeInGramsChange,
                         label = "Coffee",
                         suffix = "g",
                         modifier = Modifier.weight(1f)
                     )
-
                     Spacer(modifier = Modifier.width(8.dp))
-
                     CompactNumericInput(
-                        value = uiState.waterAmount,
-                        onValueChange = viewModel::onWaterAmountChange,
+                        value = uiState.waterInMilliliters,
+                        onValueChange = viewModel::onWaterInMillilitersChange,
                         label = "Water",
                         suffix = "ml",
                         modifier = Modifier.weight(1f)
                     )
-
                     Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp) // Match height roughly
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.5f), RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Ratio", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                            Text("1:${String.format("%.1f", uiState.ratio)}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+            }
 
+            // --- 2. TÉCNICA (Molienda, Temp, Tiempos, Vertidos) ---
+            ExpandableCard(
+                title = "Technique",
+                icon = Icons.Rounded.Science,
+                initialExpanded = false
+            ) {
+                // Grind Size Stepper
+                StepperInput(
+                    label = "Grind Size (Clicks)",
+                    value = uiState.grindSize,
+                    onValueChange = viewModel::onGrindSizeChange
+                )
+                Spacer(Modifier.height(16.dp))
+
+                // Pours Stepper
+                StepperInput(
+                    label = "Total Pours",
+                    value = uiState.pours,
+                    onValueChange = viewModel::onPoursChange
+                )
+                Spacer(Modifier.height(16.dp))
+                
+                // Temp
+                CompactNumericInput(
+                     value = uiState.waterTemperature,
+                     onValueChange = viewModel::onWaterTemperatureChange,
+                     label = "Water Temp",
+                     suffix = "°C",
+                     modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(16.dp))
+
+                // Turbulence
+                Text("Turbulence", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                FlowRowGeneric(
+                    items = TurbulenceType.values().map { it.name },
+                    selectedItem = uiState.turbulence.name,
+                    onItemSelected = { viewModel.onTurbulenceChange(TurbulenceType.valueOf(it)) }
+                )
+                Spacer(Modifier.height(16.dp))
+
+                // Times (Bloom, Total)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     CompactNumericInput(
-                        value = "1:${String.format("%.1f", uiState.ratio)}",
-                        onValueChange = {},
-                        label = "Ratio",
-                        suffix = "",
-                        readOnly = true,
+                        value = uiState.bloomTime,
+                        onValueChange = viewModel::onBloomTimeChange,
+                        label = "Bloom",
+                        suffix = "s",
+                        modifier = Modifier.weight(1f)
+                    )
+                    CompactNumericInput(
+                        value = uiState.totalTime,
+                        onValueChange = viewModel::onTotalTimeChange,
+                        label = "Total Time",
+                        suffix = "s",
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // --- Sección 3: Resultados ---
-            SectionHeader(title = "Experience", icon = Icons.Rounded.Star)
-
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(16.dp)
+            // --- 3. CATA (Sensorial, Estrellas, Notas) ---
+            ExpandableCard(
+                title = "Tasting",
+                icon = Icons.Rounded.Star,
+                initialExpanded = true
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Overall Rating", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.secondary)
-                    Spacer(Modifier.height(8.dp))
+                SensorySlider(
+                    label = "Acidity",
+                    value = uiState.acidity,
+                    onValueChange = viewModel::onAcidityChange,
+                    leftLabel = "Flat",
+                    rightLabel = "Bright"
+                )
+                Spacer(Modifier.height(12.dp))
 
-                    InteractiveStarRating(
-                        rating = uiState.rating,
-                        onRatingChange = viewModel::onRatingChange
-                    )
+                SensorySlider(
+                    label = "Sweetness",
+                    value = uiState.sweetness,
+                    onValueChange = viewModel::onSweetnessChange,
+                    leftLabel = "Dry",
+                    rightLabel = "Sweet"
+                )
+                Spacer(Modifier.height(12.dp))
 
-                    Spacer(Modifier.height(16.dp))
-                    Divider(color = MaterialTheme.colorScheme.background)
-                    Spacer(Modifier.height(16.dp))
+                SensorySlider(
+                    label = "Body",
+                    value = uiState.body,
+                    onValueChange = viewModel::onBodyChange,
+                    leftLabel = "Watery",
+                    rightLabel = "Syrupy"
+                )
+                Spacer(Modifier.height(24.dp))
+                
+                Divider()
+                Spacer(Modifier.height(16.dp))
 
-                    OutlinedTextField(
-                        value = uiState.notes,
-                        onValueChange = viewModel::onNotesChange,
-                        label = { Text("Tasting Notes") },
-                        placeholder = { Text("Fruity, acidic, chocolatey...") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = coffeeInputColors(),
-                        maxLines = 5,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
-                    )
-                }
+                Text("Check-in Rating", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.align(Alignment.CenterHorizontally))
+                InteractiveStarRating(
+                    rating = uiState.rating,
+                    onRatingChange = viewModel::onRatingChange
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = uiState.notes,
+                    onValueChange = viewModel::onNotesChange,
+                    label = { Text("Tasting Notes") },
+                    placeholder = { Text("Fruity, acidic, chocolatey...") },
+                    modifier = Modifier.fillMaxWidth().height(100.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = coffeeInputColors(),
+                    maxLines = 5
+                )
             }
         }
     }
 }
 
-// --- Componentes Auxiliares ---
+// --- CORE COMPONENTS ---
 
 @Composable
-fun SectionHeader(title: String, icon: ImageVector) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+fun ExpandableCard(
+    title: String,
+    icon: ImageVector,
+    initialExpanded: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    var expanded by remember { mutableStateOf(initialExpanded) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth().animateContentSize(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(12.dp))
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                Icon(
+                    imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (expanded) {
+                Column(
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                    content = content
+                )
+            }
+        }
     }
 }
 
 @Composable
-fun BrewMethodSelector(
-    selectedMethod: String,
-    onMethodSelected: (String) -> Unit
+fun SingleChoiceSegmentedRow(
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit
 ) {
-    val methods = listOf("V60", "AeroPress", "French Press", "Chemex", "Espresso")
-    var expanded by remember { mutableStateOf(false) }
-
-    Box {
-        OutlinedTextField(
-            value = selectedMethod,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Brew Method") },
-            leadingIcon = { Icon(Icons.Rounded.FilterList, contentDescription = null, tint = MaterialTheme.colorScheme.secondary) },
-            trailingIcon = {
-                Icon(
-                    Icons.Default.ArrowDropDown,
-                    contentDescription = "Dropdown",
-                    modifier = Modifier.clickable { expanded = !expanded }
+    Row(modifier = Modifier.fillMaxWidth()) {
+        options.forEach { option ->
+            val isSelected = option.equals(selectedOption, ignoreCase = true)
+            FilterChip(
+                selected = isSelected,
+                onClick = { onOptionSelected(option) },
+                label = { Text(option) },
+                modifier = Modifier.padding(end = 8.dp),
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
-            },
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun FlowRowGeneric(
+    items: List<String>,
+    selectedItem: String,
+    onItemSelected: (String) -> Unit
+) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items.forEach { item ->
+            val isSelected = item.equals(selectedItem, ignoreCase = true)
+            FilterChip(
+                selected = isSelected,
+                onClick = { onItemSelected(item) },
+                label = { Text(item) },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            )
+        }
+    }
+}
+
+@Composable
+fun SensorySlider(
+    label: String,
+    value: Int?,
+    onValueChange: (Int) -> Unit,
+    leftLabel: String,
+    rightLabel: String
+) {
+    Column {
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = coffeeInputColors()
-        )
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            methods.forEach { method ->
-                DropdownMenuItem(
-                    text = { Text(method, color = MaterialTheme.colorScheme.primary) },
-                    onClick = {
-                        onMethodSelected(method)
-                        expanded = false
-                    }
-                )
+            Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+            Text(
+                text = value?.toString() ?: "-",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+        Slider(
+            value = (value ?: 3).toFloat(),
+            onValueChange = { onValueChange(it.toInt()) },
+            valueRange = 1f..5f,
+            steps = 3,
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colorScheme.secondary,
+                activeTrackColor = MaterialTheme.colorScheme.secondary,
+                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        )
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(leftLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+            Text(rightLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+        }
+    }
+}
+
+@Composable
+fun StepperInput(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    val intValue = value.toIntOrNull() ?: 0
+
+    Column {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(bottom = 4.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha=0.3f))
+                .padding(4.dp)
+        ) {
+            IconButton(
+                onClick = { if (intValue > 0) onValueChange((intValue - 1).toString()) },
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(Icons.Filled.Remove, null, tint = MaterialTheme.colorScheme.primary)
+            }
+            
+            Text(
+                text = value,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            IconButton(
+                onClick = { onValueChange((intValue + 1).toString()) },
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(Icons.Filled.Add, null, tint = MaterialTheme.colorScheme.primary)
             }
         }
     }
@@ -257,7 +481,7 @@ fun CompactNumericInput(
     modifier: Modifier = Modifier,
     readOnly: Boolean = false
 ) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier = modifier) {
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -269,9 +493,9 @@ fun CompactNumericInput(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.secondary,
-                unfocusedBorderColor = Color.Transparent,
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface
             ),
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
@@ -308,7 +532,7 @@ fun coffeeInputColors() = OutlinedTextFieldDefaults.colors(
     focusedLabelColor = MaterialTheme.colorScheme.primary,
     cursorColor = MaterialTheme.colorScheme.primary,
     unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-    focusedContainerColor = Color.White
+    focusedContainerColor = MaterialTheme.colorScheme.surface
 )
 
 @Preview(showBackground = true)
